@@ -1,180 +1,67 @@
 
-Walmart Sales Data Analysis
 
+Walmart Sales Data Analysis - Análise de Faturamento 2022-2023 – Power BI, Python e SQL Server
 Descrição do Projeto
 
-Este projeto tem como objetivo realizar a análise de dados de vendas do Walmart, utilizando ferramentas de Python (Pandas), SQL Server e Power BI.
-O fluxo completo envolve a limpeza e transformação dos dados, carregamento no banco de dados SQL Server e criação de tabelas analíticas para visualização em dashboards interativos.
+Este projeto apresenta uma análise de dados de vendas da rede Walmart utilizando Python (pandas), SQL Server e Power BI.
+O objetivo foi comparar o desempenho de faturamento entre 2022 e 2023, avaliar a distribuição por categoria e método de pagamento, e identificar as filiais com maior crescimento percentual.
+
+Objetivos
+
+Realizar a extração e limpeza dos dados de vendas.
+
+Calcular o faturamento anual e suas variações.
+
+Construir indicadores (KPIs) no Power BI.
+
+Identificar padrões de crescimento e sazonalidade.
+
+Criar visualizações interativas e interpretáveis.
 
 Tecnologias Utilizadas
 
-Python 3.10+
+Python: pandas, matplotlib, sqlalchemy, pyodbc
 
-Bibliotecas: pandas, sqlalchemy, psycopg2, pyodbc
+SQL Server: armazenamento e consultas de dados
 
-SQL Server (SQL Express)
+Power BI: visualização de KPIs e dashboards
 
-Power BI Desktop
+Estrutura Analítica
 
-Dataset: Walmart_dataset.csv
+A análise foi dividida em três etapas principais:
 
-Etapas do Projeto
+Tratamento e integração de dados
 
-1. Limpeza e Transformação dos Dados com Python
+Leitura e limpeza de dados com Python (pandas)
 
-As principais etapas do tratamento foram:
+Inserção no banco de dados SQL Server
 
-Leitura do dataset original com pandas.read_csv().
+Consultas SQL para agregações e filtros
 
-Verificação de valores nulos (.isnull().sum()) e remoção de linhas incompletas (dropna()).
+Modelagem no Power BI
 
-Eliminação de duplicatas (drop_duplicates()).
+Criação das medidas DAX para cálculo de KPIs
 
-Padronização dos nomes das colunas para letras minúsculas.
+Relacionamentos entre tabelas de Data, Vendas e Categoria
 
-Conversão de tipos de dados:
+Visualização e interpretação dos resultados
 
-quantity → inteiro
+Dashboard comparando os anos de 2022 e 2023
 
-unit_price → float (remoção do símbolo $)
+Gráficos de distribuição e rankings por categoria e filial
 
-Criação da coluna total_price com base na multiplicação entre unit_price e quantity.
+Métricas DAX Utilizadas
+Diferença_faturamento = [Faturamento_2023] - [Faturamento_2022]
 
-Exportação do dataset tratado para um novo arquivo:
-
-Cdf.to_csv('Dataset_Walmart_transformed.csv', index=False)
-
-2. Envio do Dataset para o SQL Server
-
-Após o tratamento, o dataset foi carregado no SQL Server usando SQLAlchemy:
-
-from sqlalchemy import create_engine
-
-engine = create_engine(
-    "mssql+pyodbc://@localhost\\SQLEXPRESS/wlt?driver=ODBC+Driver+17+for+SQL+Server&trusted_connection=yes"
-)
-
-df.to_sql(
-    name='Walmart',
-    con=engine,
-    if_exists='replace',
-    index=False
-)
-
-3. Consultas SQL e Criação de Tabelas de Apoio
-
-    Tabela de Vendas
-
-WITH vendas AS (
-    SELECT
-        invoice_id,
-        category,
-        unit_price,
-        total_price,
-        quantity,
-        rating,
-        payment_method,
-        branch,
-        date
-    FROM Walmart
-)
-SELECT *
-FROM vendas
-WHERE YEAR(CONVERT(DATE, [date], 3)) IN (2022, 2023);
-
-    Tabela de Filial
-
-WITH filial AS (
-    SELECT 
-        branch,
-        city
-    FROM Walmart
-)
-SELECT *
-FROM filial;
-
-    Tabela de Data
-
-WITH data AS (
-    SELECT 
-        CONVERT(DATE, [date], 3) AS data_completa,
-        YEAR(CONVERT(DATE, [date], 3)) AS ano_data,
-        DATENAME(MONTH, CONVERT(DATE, [date], 3)) AS mes_data,
-        DATENAME(WEEKDAY, CONVERT(DATE, [date], 3)) AS dia_data,
-        CASE 
-            WHEN DATEPART(HOUR, TRY_CONVERT(time, [time])) BETWEEN 6 AND 11 THEN 'Morning'
-            WHEN DATEPART(HOUR, TRY_CONVERT(time, [time])) BETWEEN 12 AND 17 THEN 'Afternoon'
-            ELSE 'Evening'
-        END AS turno
-    FROM Walmart
-    WHERE YEAR(CONVERT(DATE, [date], 3)) IN (2022, 2023)
-)
-SELECT * FROM data;
-
-
-Essas tabelas servem como base para modelagem no Power BI, permitindo análises como:
-
-Faturamento total por ano
-
-Vendas por categoria e filial
-
-Padrões de compra por horário e dia da semana
-
-Resultados e Visualizações
-
-As tabelas criadas no SQL Server foram importadas para o Power BI, onde foram desenvolvidos dashboards interativos com os principais indicadores de desempenho.
-(Você pode incluir prints ou links do dashboard aqui quando quiser)
-
-4. Métricas DAX Implementadas
-
-As seguintes medidas foram criadas no Power BI para acompanhar a evolução do faturamento entre 2022 e 2023:
-
-Faturamento 2022
-
-Calcula o total de faturamento apenas para o ano de 2022.
-
-Faturamento_2022 = 
-CALCULATE(
+Faturamento_2022 = CALCULATE(
     SUM('Venda'[faturamento]),
     'Data'[ano] = 2022
 )
 
-Faturamento 2023
-
-Calcula o total de faturamento apenas para o ano de 2023.
-
-Faturamento_2023 = 
-CALCULATE(
+Faturamento_2023 = CALCULATE(
     SUM('Venda'[faturamento]),
     'Data'[ano] = 2023
 )
-
-Diferença de Faturamento
-
-Retorna a diferença absoluta entre o faturamento de 2023 e 2022.
-
-Diferença_faturamento = 
-[Faturamento_2023] - [Faturamento_2022]
-
-Variação Percentual
-
-Calcula a variação percentual entre os dois anos.
-
-Variacao_percentual = 
-DIVIDE(
-    [Diferença_faturamento],
-    [Faturamento_2022]
-)
-
-Ícone de Tendência Percentual
-
-Mostra um ícone visual conforme o resultado da variação:
-
-🟢 aumento
-
-🔴 queda
-
-⚪ estabilidade
 
 iconePercentual = 
 VAR v = [Variacao_percentual]
@@ -186,88 +73,68 @@ SWITCH(
     v == 0, "⚪ "
 )
 
+Variacao_percentual = DIVIDE(
+    [Diferença_faturamento],
+    [Faturamento_2022]
+)
 
-Essas métricas foram utilizadas para construir os KPIs principais no dashboard do Power BI, permitindo visualizar de forma rápida:
 
-O faturamento total por ano;
+Essas medidas permitiram calcular e visualizar a evolução do faturamento entre os anos, destacando a variação absoluta e percentual.
 
-A variação percentual entre períodos;
+Visualização dos KPIs
 
-A tendência (positiva, negativa ou neutra) com ícones visuais.
+Abaixo está a visualização criada no Power BI para acompanhar os principais indicadores de desempenho do projeto, incluindo faturamento anual, variação percentual, distribuição por método de pagamento e ranking de filiais.
 
-5. Visualização dos KPIs — Dashboard de Faturamento 2022–2023
+<p align="center"> <img src="imagem/dashboard_kpis.png" alt="Dashboard Power BI" width="80%"> </p>
+Análise do Dashboard de Faturamento 2022-2023
 
-O dashboard desenvolvido no Power BI apresenta a análise comparativa do faturamento entre os anos de **2022 e 2023**, com foco em **método de pagamento**, **categoria de produto** e **desempenho por filial**.
+O dashboard demonstra o desempenho de faturamento, comparando 2022 e 2023, e detalha a distribuição por método de pagamento e categoria, além de um ranking por filial.
 
-![Dashboard Power BI](imagens/dashboard_kpis.png)
+Resultados Principais
 
----
+Faturamento Total (2023): $232 mil
 
-### 💰 Resultados Principais
+Faturamento Total (2022): $217 mil
 
-- **Faturamento Total (2023):** \$232 mil  
-- **Faturamento Total (2022):** \$217 mil  
-- **Variação Absoluta (YoY):** \$15 mil  
-- **Variação Percentual (YoY):** **+7%** (crescimento de 2023 sobre 2022)
+Variação Anual Absoluta (YoY): $15 mil
 
-As métricas foram calculadas no Power BI por meio de **medidas DAX**, integrando os dados processados via Python e SQL Server.
+Variação Percentual (YoY): 7% (crescimento de 2023 sobre 2022)
 
----
+Desempenho e Distribuição
 
-### 📈 Desempenho e Distribuição
+Faturamento por Método de Pagamento:
 
-**Faturamento por Método de Pagamento:**
-- 💳 *Cartão de Crédito:* \$179,11 mil (**76,89%**)  
-- 📱 *eWallet:* \$195,86 mil (**43,56%**)  
-- 💵 *Cash:* \$74,69 mil (**16,61%**)  
+Cartão de Crédito: $179,11 mil (76,89%)
 
-> ⚠️ Observação: a soma dos percentuais indica que o cálculo pode estar sendo feito sobre o total de vendas gerais. É recomendável revisar a base para garantir consistência percentual.
+eWallet: $195,86 mil (43,56%)
 
-**Faturamento por Categoria:**
-- 👜 *Fashion Accessories* — categoria com maior faturamento  
-- 🏠 *Home and Lifestyle* — segunda posição  
-- 💻 *Electronic Accessories* — terceira posição  
+Dinheiro (Cash): $74,69 mil (16,61%)
+Observação: a soma dos percentuais deve ser verificada em relação ao total do dataset.
 
-📅 **Sazonalidade:** crescimento acentuado nos últimos meses de **2023 (Outubro, Novembro, Dezembro)** em relação a 2022, indicando possível efeito sazonal nas vendas.
+Faturamento por Categoria:
 
----
+Fashion Accessories (Acessórios de Moda) lidera as vendas.
 
-### 🗺️ Desempenho por Filial
+Home and Lifestyle e Electronic Accessories seguem em ordem decrescente.
 
-Filiais com maior crescimento percentual (2023 vs 2022):
+Sazonalidade: crescimento acentuado nos meses de outubro, novembro e dezembro de 2023 em comparação com 2022.
 
-| Filial | Localização | Variação (%) |
-|:-------|:-------------|-------------:|
-| MALM006 | El Paso | **+173%** |
-| MALM010 | Laredo | **+162%** |
-| MALM091 | Little Elm | **+149%** |
+Desempenho por Filial
 
----
+Maiores crescimentos percentuais (2023 vs 2022):
 
-6. Aprendizados
+MALM006 (El Paso): 173%
 
-Durante o desenvolvimento deste projeto, foram consolidados conhecimentos sobre:
+MALM010 (Laredo): 162%
 
-Limpeza e transformação de dados com Pandas.
+MALM091 (Little Elm): 149%
 
-Integração entre Python e SQL Server.
+Conclusão
 
-Criação de modelos relacionais para análise em Power BI.
-
-Organização de um fluxo de ETL (Extract, Transform, Load) completo.
-
-Próximos Passos
-
-Implementar métricas DAX no Power BI para KPIs de faturamento e desempenho por categoria.
-
-Automatizar o fluxo de atualização de dados.
-
-Adicionar testes e logs no script Python.
+A análise demonstra um aumento consistente no faturamento de 2023 em relação a 2022, com destaque para o crescimento em algumas filiais e categorias específicas.
+Os resultados evidenciam o potencial de utilização integrada de Python, SQL e Power BI para criação de relatórios de desempenho automatizados e visualmente intuitivos.
 
 Autor
 
 Dion Lopes
-[Seu email opcional]
-[Link do seu GitHub ou LinkedIn]
-
-
+Projeto de análise de dados com fins educacionais e demonstrativos.
